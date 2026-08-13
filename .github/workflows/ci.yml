@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Unit tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['18', '20', '22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  scripts:
+    name: Frame preparation scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      # The scripts are stdlib-only, so "it imports and its --help works" is the
+      # whole contract there is to check without sample media.
+      - name: Byte-compile
+        run: python -m compileall -q scripts/
+      - name: Import every module
+        run: python -c "import sys; sys.path.insert(0, 'scripts'); import frameseq, extract_frames, index_frames, check_sequences"
+      # check_sequences.py takes no arguments — it inspects outputs/frames and
+      # exits non-zero when there is nothing to check, so it has no --help to run.
+      - name: Smoke-test the argument parsers
+        run: |
+          python scripts/extract_frames.py --help > /dev/null
+          python scripts/index_frames.py --help > /dev/null

@@ -1,0 +1,704 @@
+/* Timeline Annotator — the app is a single page, so this is the whole stylesheet
+   (reset included). Layout classes on <body> (layout-single / layout-duo /
+   layout-grid) switch the frame preview between one and two stacked views. */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #f0f0f0;
+  color: #333;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+#header {
+  height: 44px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+#header h1 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e94560;
+  white-space: nowrap;
+}
+#header .sep { width: 1px; height: 24px; background: #ddd; }
+#frame-seq-select {
+  flex: 1;
+  max-width: 280px;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  background: #fafafa;
+}
+#btn-refresh-seq {
+  padding: 3px 9px;
+  font-size: 14px;
+  line-height: 1;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  color: #666;
+}
+#btn-refresh-seq:hover { background: #f0f0f0; color: #333; }
+
+/* ── Main layout ─────────────────────────────────────────── */
+#main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────── */
+#sidebar {
+  width: 240px;
+  min-width: 160px;
+  max-width: 600px;
+  flex-shrink: 0;       /* keep its width; the drag handle resizes it */
+  background: #f5f5f5;
+  border-right: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+/* Drag handle between sidebar and content */
+#sidebar-resizer {
+  flex: 0 0 5px;
+  cursor: col-resize;
+  background: #ddd;
+  transition: background 0.15s;
+}
+#sidebar-resizer:hover,
+#sidebar-resizer.dragging { background: #e94560; }
+.panel {
+  padding: 10px 14px;
+  border-bottom: 1px solid #ddd;
+}
+.panel-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+/* Annotation-layer (Phase / Gesture) switch */
+.mode-switch { display: flex; gap: 6px; }
+.mode-btn {
+  flex: 1;
+  padding: 6px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  color: #555;
+}
+.mode-btn:hover { background: #f0f0f0; }
+.mode-btn.active-mode { background: #e94560; color: #fff; border-color: #e94560; }
+
+/* Phase list */
+#phase-list { display: flex; flex-direction: column; gap: 4px; }
+.phase-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  font-size: 12px;
+  transition: background 0.12s;
+}
+.phase-item:hover { background: #e8e8e8; }
+.phase-item.active { border-color: #e94560; background: #fff0f2; }
+.phase-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.phase-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.phase-label[contenteditable="true"] {
+  outline: none;
+  border-bottom: 1px dashed #aaa;
+}
+.phase-del {
+  opacity: 0;
+  cursor: pointer;
+  font-size: 14px;
+  color: #aaa;
+  line-height: 1;
+}
+.phase-item:hover .phase-del { opacity: 1; }
+.phase-del:hover { color: #e94560; }
+
+#btn-add-phase {
+  margin-top: 6px;
+  width: 100%;
+  padding: 5px;
+  font-size: 12px;
+  border: 1px dashed #bbb;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  color: #666;
+}
+#btn-add-phase:hover { background: #eee; }
+
+/* Annotation list */
+#ann-list { display: flex; flex-direction: column; gap: 3px; }
+.ann-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  border: 2px solid transparent;
+}
+.ann-item:hover { background: #e8e8e8; }
+.ann-item.selected { border-color: #e94560; background: #fff0f2; }
+.ann-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.ann-times { flex: 1; color: #555; font-family: monospace; }
+.ann-del { opacity: 0; cursor: pointer; font-size: 13px; color: #aaa; }
+.ann-item:hover .ann-del { opacity: 1; }
+.ann-del:hover { color: #e94560; }
+
+/* Sidebar buttons */
+.sidebar-btn-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 14px;
+}
+.sidebar-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  text-align: center;
+}
+.sidebar-btn:hover { background: #f0f0f0; }
+.sidebar-btn.primary { background: #e94560; color: #fff; border-color: #e94560; }
+.sidebar-btn.primary:hover { background: #c73550; }
+
+/* ── Content area ────────────────────────────────────────── */
+#content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* Placeholder container (shown until a sequence is selected) */
+#video-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  min-height: 0;
+  position: relative;
+}
+#video-placeholder {
+  color: #555;
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ── Frame preview + filmstrip ───────────────────────────── */
+#filmstrip-wrap {
+  display: none;       /* shown once a sequence is loaded */
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  background: #111;
+}
+
+/* Current frame — fills available height above the strip */
+#frame-preview {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+/* Fit box for the preview. Two-view layouts ('duo' / 'grid') stack the
+   console view above the second view; two 16:9 panels give the box 8:9.
+   Single-view sequences hide the second panel and take their aspect ratio
+   from meta.json (set inline by applyFitAspect in annotator.js). Panel
+   backgrounds are set per-frame by setPanelFrame(). */
+#frame-fit {
+  position: relative;
+  height: 100%;
+  aspect-ratio: 8 / 9;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  container-type: inline-size;   /* enable cqi units for #frame-overlay sizing */
+}
+.frame-panel {
+  flex: 1;
+  min-height: 0;
+  background-repeat: no-repeat;
+  background-color: #000;
+  pointer-events: none;
+}
+body.layout-single #frame-fit  { aspect-ratio: 16 / 9; }   /* replaced from meta.json */
+body.layout-single #frame-hands { display: none; }
+
+/* On-frame overlay: current phase + gesture. Sized in container-query units
+   (cqi = 1% of #frame-fit width) so the labels scale with the frame box —
+   which itself tracks the window — and stay compact. clamp() caps them. */
+#frame-overlay {
+  position: absolute;
+  top: clamp(5px, 1.8cqi, 14px);
+  left: clamp(5px, 1.8cqi, 14px);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 1.3cqi, 11px);
+  pointer-events: none;
+}
+#frame-overlay .ovl-row {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 1.8cqi, 16px);
+  background: rgba(0, 0, 0, 0.62);
+  border-radius: clamp(5px, 1.3cqi, 12px);
+  padding: clamp(3px, 1cqi, 10px) clamp(7px, 2.2cqi, 22px)
+           clamp(3px, 1cqi, 10px) clamp(6px, 1.6cqi, 18px);
+  font-size: clamp(12px, 4.2cqi, 30px);
+  line-height: 1.2;
+  color: #fff;
+  max-width: 92cqi;
+}
+#frame-overlay .ovl-k {
+  font-size: clamp(8px, 2.3cqi, 16px);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #cfcfcf;
+  width: clamp(34px, 10.5cqi, 90px);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#frame-overlay .ovl-dot {
+  width: clamp(9px, 3cqi, 22px);
+  height: clamp(9px, 3cqi, 22px);
+  border-radius: 50%;
+  background: #888;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+#frame-overlay .ovl-v {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Scrollable thumbnail strip */
+#thumb-strip {
+  flex-shrink: 0;
+  height: 120px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: #1a1a1a;
+  border-top: 1px solid #333;
+}
+#filmstrip {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 3px;
+  padding: 6px;
+  user-select: none;
+}
+.thumb-wrap {
+  flex-shrink: 0;
+  position: relative;
+  height: 108px;
+  aspect-ratio: 16/9;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #333;
+}
+.thumb-wrap:hover { border-color: rgba(255,255,255,0.35); }
+.thumb-wrap.current { border-color: #e94560; box-shadow: 0 0 0 1px #e94560; }
+.thumb-wrap.in-range { border-color: rgba(233,69,96,0.6); background: rgba(233,69,96,0.15); }
+.thumb-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Phase colour bar at bottom of each thumbnail */
+.thumb-phase-bar {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 5px;
+}
+
+/* ── Timeline area ──────────────────────────────────────── */
+#timeline-area {
+  flex-shrink: 0;
+  background: #fafafa;
+  border-top: 1px solid #ddd;
+  padding: 6px 14px;
+  user-select: none;
+  display: flex;            /* lanes use CSS `order` to keep phase top / gesture bottom */
+  flex-direction: column;
+}
+
+/* Ruler */
+#ruler-wrap {
+  order: 0;
+  position: relative;
+  height: 22px;
+  margin-bottom: 4px;
+  cursor: pointer;
+}
+#ruler-bg {
+  position: absolute;
+  top: 12px;
+  left: 0; right: 0;
+  height: 4px;
+  background: #e0e0e0;
+  border-radius: 2px;
+}
+#ruler-fill {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  height: 4px;
+  background: #e94560;
+  border-radius: 2px;
+  width: 0;
+  pointer-events: none;
+}
+#ruler-head {
+  position: absolute;
+  top: 7px;
+  width: 10px;
+  height: 14px;
+  background: #e94560;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  left: 0;
+  pointer-events: none;
+  transition: left 0.05s linear;
+}
+.ruler-tick {
+  position: absolute;
+  top: 0;
+  font-size: 9px;
+  color: #aaa;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.ruler-tick::after {
+  content: '';
+  display: block;
+  width: 1px;
+  height: 5px;
+  background: #ccc;
+  margin: 1px auto 0;
+}
+
+/* Annotation lane */
+#lane-label {
+  font-size: 10px;
+  color: #aaa;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+#ann-lane {
+  position: relative;
+  height: 32px;
+  background: #ebebeb;
+  border-radius: 4px;
+  overflow: visible;
+  cursor: crosshair;
+  margin-bottom: 6px;
+}
+#ann-lane-playhead,
+#ref-lane-playhead {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: #e94560;
+  pointer-events: none;
+  left: 0;
+}
+
+/* Read-only reference lane (the non-editable annotation layer) */
+.lane-label-sub {
+  font-size: 10px;
+  color: #bbb;
+  margin: 2px 0 3px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+#ref-lane {
+  position: relative;
+  height: 32px;            /* match #ann-lane so the bar doesn't resize on mode toggle */
+  background: #f1f1f1;
+  border-radius: 4px;
+  overflow: visible;
+  margin-bottom: 6px;
+}
+#ref-lane .seg { cursor: pointer; }   /* read-only: no delete / drag */
+.seg {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 3px;
+  opacity: 0.85;
+  cursor: pointer;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 10px;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: opacity 0.1s;
+}
+.seg:hover { opacity: 1; }
+.seg.selected { border-color: #333; opacity: 1; }
+.seg-label { pointer-events: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seg-del {
+  position: absolute;
+  top: 2px; right: 3px;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.35);
+  color: #fff;
+  font-size: 8px;
+  line-height: 13px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+}
+.seg:hover .seg-del { opacity: 1; }
+.seg-del:hover { background: rgba(0,0,0,0.65); }
+.seg.drop-target { outline: 2px dashed #333; opacity: 1; }
+.ann-item.drop-target { outline: 2px dashed #e94560; background: #fff0f2; }
+.phase-item[draggable="true"] { cursor: grab; }
+.phase-item[draggable="true"]:active { cursor: grabbing; }
+/* ghost segment during drag */
+#seg-ghost {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 3px;
+  opacity: 0.45;
+  pointer-events: none;
+  display: none;
+  border: 2px dashed #666;
+}
+
+/* ── Controls bar ─────────────────────────────────────────── */
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 6px 14px 8px;
+  background: #fafafa;
+  border-top: 1px solid #e8e8e8;
+  flex-shrink: 0;
+}
+.ctrl-group { display: flex; align-items: center; gap: 5px; }
+.ctrl-group + .ctrl-group { padding-left: 10px; border-left: 1px solid #ddd; }
+
+.ctrl-btn {
+  padding: 4px 10px;
+  font-size: 13px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  min-width: 32px;
+}
+.ctrl-btn:hover { background: #f0f0f0; }
+.ctrl-btn:disabled { opacity: 0.4; cursor: default; }
+#btn-play { min-width: 48px; font-size: 15px; }
+
+#time-display {
+  font-family: monospace;
+  font-size: 13px;
+  color: #555;
+  min-width: 110px;
+}
+
+/* Mark badges — single pill per mark */
+.mark-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  font-size: 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 20px;
+  background: #fff;
+  cursor: pointer;
+  color: #aaa;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.mark-btn span { font-family: monospace; }
+.mark-btn:hover { border-color: #bbb; color: #777; }
+.mark-btn.has-val { background: #e94560; border-color: #e94560; color: #fff; }
+.mark-btn.picking {
+  background: #fff0f2; border-color: #e94560; color: #e94560; font-weight: 600;
+  animation: mark-pulse 1s ease-in-out infinite;
+}
+@keyframes mark-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(233,69,96,0.35); }
+  50%       { box-shadow: 0 0 0 5px rgba(233,69,96,0); }
+}
+
+/* Current phase / gesture badges */
+#current-phase-badge,
+#current-gesture-badge {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid #ddd;
+  color: #bbb;
+  background: transparent;
+  white-space: nowrap;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+#filmstrip-wrap.picking-start,
+#filmstrip-wrap.picking-end { cursor: crosshair; }
+#filmstrip-wrap.picking-start .thumb-wrap,
+#filmstrip-wrap.picking-end   .thumb-wrap { cursor: crosshair; }
+
+#phase-select-ctrl,
+#speed-select,
+#limit-select {
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+}
+#limit-select { max-width: 220px; }
+
+#btn-add-seg {
+  background: #e94560;
+  color: #fff;
+  border-color: #e94560;
+}
+#btn-add-seg:hover:not(:disabled) { background: #c73550; }
+
+/* Keyboard hint */
+#kbd-hint {
+  font-size: 10px;
+  color: #bbb;
+  margin-left: auto;
+  white-space: nowrap;
+}
+kbd {
+  display: inline-block;
+  padding: 1px 4px;
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 10px;
+}
+
+/* Phase popover after drag / import popover */
+#phase-popover,
+#import-popover {
+  position: fixed;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 8px;
+  z-index: 1000;
+  display: none;
+  min-width: 200px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+#phase-popover .pop-title,
+#import-popover .pop-title {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.pop-phase-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 5px 6px;
+  border: none;
+  background: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  text-align: left;
+}
+.pop-phase-btn:hover { background: #f0f0f0; }
+.pop-phase-btn.active { background: #eef3ff; font-weight: 600; }
+.pop-phase-dot {
+  width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+}
+#pop-cancel {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #aaa;
+  cursor: pointer;
+  text-align: center;
+  width: 100%;
+}
+#pop-cancel:hover { color: #e94560; }

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Timeline Annotator</title>
+  <link rel="stylesheet" href="./src/styles/annotator.css" />
+</head>
+<body>
+
+<!-- Header -->
+<div id="header">
+  <h1>Timeline Annotator</h1>
+  <div class="sep"></div>
+  <select id="frame-seq-select">
+    <option value="">— select frame sequence —</option>
+  </select>
+  <button id="btn-refresh-seq" title="outputs/frames/ を再スキャン">⟳</button>
+</div>
+
+<!-- Main -->
+<div id="main">
+
+  <!-- Sidebar -->
+  <aside id="sidebar">
+
+    <!-- Annotation-layer switch: toggles the palette + editable lane between
+         the phase and the gesture track. -->
+    <div class="panel" id="mode-group" style="display:none">
+      <div class="panel-title">Annotation Layer</div>
+      <div class="mode-switch">
+        <button class="mode-btn active-mode" id="btn-mode-phase">Phase</button>
+        <button class="mode-btn" id="btn-mode-gesture">Gesture</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title" id="palette-title">Phase Palette</div>
+      <div id="phase-list"></div>
+      <button id="btn-add-phase">+ Add phase</button>
+    </div>
+
+    <div class="panel" style="flex:1; min-height:0; overflow-y:auto;">
+      <div class="panel-title">Annotations</div>
+      <div id="ann-list"></div>
+    </div>
+
+    <div class="sidebar-btn-group">
+      <button class="sidebar-btn primary" id="btn-export">Export JSON</button>
+      <button class="sidebar-btn" id="btn-import">Import JSON</button>
+    </div>
+
+  </aside>
+
+  <!-- Drag handle to resize the sidebar -->
+  <div id="sidebar-resizer" title="ドラッグで幅を変更"></div>
+
+  <!-- Content -->
+  <section id="content">
+
+    <!-- Placeholder shown until a frame sequence is selected -->
+    <div id="video-container">
+      <div id="video-placeholder">
+        Select a frame sequence above to begin annotation.<br>
+        <span style="font-size:12px;color:#777">
+          Run <code>python scripts/extract_frames.py</code>
+          (or <code>scripts/index_frames.py</code>) first if no sequences appear.
+        </span>
+      </div>
+    </div>
+
+    <!-- Frame preview + filmstrip -->
+    <div id="filmstrip-wrap">
+      <div id="frame-preview">
+        <div id="frame-fit">
+          <div id="frame-console" class="frame-panel"></div>
+          <div id="frame-hands" class="frame-panel"></div>
+          <div id="frame-overlay">
+            <div class="ovl-row"><span class="ovl-k">PHASE</span><span class="ovl-dot" id="ovl-phase-dot"></span><span class="ovl-v" id="ovl-phase-val">—</span></div>
+            <div class="ovl-row"><span class="ovl-k">GESTURE</span><span class="ovl-dot" id="ovl-pose-dot"></span><span class="ovl-v" id="ovl-pose-val">—</span></div>
+          </div>
+        </div>
+      </div>
+      <div id="thumb-strip">
+        <div id="filmstrip"></div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div id="timeline-area">
+      <div id="ruler-wrap">
+        <div id="ruler-bg"></div>
+        <div id="ruler-fill"></div>
+        <div id="ruler-head"></div>
+      </div>
+
+      <div id="lane-label">Phase Annotations — drag to create, click to select</div>
+      <div id="ann-lane">
+        <div id="seg-ghost"></div>
+        <div id="ann-lane-playhead"></div>
+      </div>
+
+      <div id="ref-lane-label" class="lane-label-sub" style="display:none"></div>
+      <div id="ref-lane" style="display:none">
+        <div id="ref-lane-playhead"></div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div id="controls">
+      <div class="ctrl-group">
+        <button class="ctrl-btn" id="btn-seek-back" title="-5s">«</button>
+        <button class="ctrl-btn" id="btn-frame-back" title="-1 frame">‹</button>
+        <button class="ctrl-btn" id="btn-play" title="Space">▶</button>
+        <button class="ctrl-btn" id="btn-frame-fwd" title="+1 frame">›</button>
+        <button class="ctrl-btn" id="btn-seek-fwd" title="+5s">»</button>
+        <select id="speed-select" title="再生速度">
+          <option value="0.1">0.1×</option>
+          <option value="0.25">0.25×</option>
+          <option value="0.5">0.5×</option>
+          <option value="1" selected>1×</option>
+          <option value="2">2×</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <span id="time-display">0:00.0 / 0:00.0</span>
+        <span id="current-phase-badge">—</span>
+        <span id="current-gesture-badge" style="display:none">—</span>
+      </div>
+      <div class="ctrl-group">
+        <button class="mark-btn" id="btn-mark-start" title="S">Start · <span id="mark-start-val">—</span></button>
+        <button class="mark-btn" id="btn-mark-end"   title="E">End · <span id="mark-end-val">—</span></button>
+      </div>
+      <div class="ctrl-group">
+        <select id="phase-select-ctrl"></select>
+        <button class="ctrl-btn" id="btn-add-seg" disabled>Add Segment</button>
+      </div>
+      <div class="ctrl-group">
+        <select id="limit-select" title="再生・シークをフェーズ区間に限定">
+          <option value="">Limit: all</option>
+        </select>
+      </div>
+      <div id="kbd-hint">
+        <kbd>Space</kbd> play &nbsp;
+        <kbd>S</kbd><kbd>E</kbd> mark &nbsp;
+        <kbd>A</kbd> add &nbsp;
+        <kbd>Del</kbd> delete
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<!-- Import popover -->
+<div id="import-popover">
+  <div class="pop-title">Load annotation</div>
+  <div id="import-file-list"></div>
+  <div id="import-cancel">Cancel</div>
+</div>
+
+<!-- Phase popover (shown after drag-create, or when relabeling a segment) -->
+<div id="phase-popover">
+  <div class="pop-title" id="pop-title">Assign phase</div>
+  <div id="pop-phase-list"></div>
+  <div id="pop-cancel">Cancel</div>
+</div>
+
+<script type="module" src="/src/annotator.js"></script>
+</body>
+</html>

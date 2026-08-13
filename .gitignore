@@ -1,0 +1,14 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Input media and extracted frames are large and machine-local.
+data/videos/*
+!data/videos/.gitkeep
+outputs/frames/*
+!outputs/frames/.gitkeep
+
+# outputs/annotations/ is intentionally NOT ignored — the exported JSON is the
+# deliverable of this repo and is meant to be committed.

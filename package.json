@@ -1,0 +1,41 @@
+{
+  "name": "timeline-annotator",
+  "version": "0.1.0",
+  "description": "Browser tool for labelling surgical video on two layers: Phase (task stages) and Gesture (JIGSAWS-style sub-segmentation).",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TaiToTo/surgical-timeline-annotator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TaiToTo/surgical-timeline-annotator/issues"
+  },
+  "homepage": "https://github.com/TaiToTo/surgical-timeline-annotator#readme",
+  "keywords": [
+    "annotation",
+    "video-annotation",
+    "surgical-video",
+    "timeline",
+    "jigsaws",
+    "surgical-phase-recognition",
+    "gesture-segmentation"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "//": "private: this is an app, not an npm package — it is never published to the registry.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "annotator": "vite --open /index.html",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0",
+    "vitest": "^2.1.9"
+  }
+}
