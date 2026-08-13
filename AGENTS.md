@@ -55,7 +55,8 @@ timeline_annotator/
 ├── docs/
 │   ├── annotator_spec.md   # UI, data model, exported JSON schema
 │   ├── frame_preparation.md# Layouts, meta.json, which script for which input
-│   └── label_sets.md       # The phase / gesture vocabularies and how to change them
+│   ├── label_sets.md       # The phase / gesture vocabularies and how to change them
+│   └── images/             # README screenshots + CREDITS.md (CC BY attribution)
 ├── data/videos/            # Drop input videos here (gitignored)
 └── outputs/
     ├── frames/             # Extracted frame sequences (gitignored)
@@ -124,6 +125,11 @@ to make a human's segment boundaries fast and reproducible.
 
 After any code or structural change, audit the docs it could make stale and fix
 them in the same change. Then print a copy-pasteable commit message.
+
+`docs/images/*.png` are screenshots of the running UI, so a change to the layout,
+the lanes or the sidebar dates them. Regenerate by following the README's "Try it
+on a sample video" section (the same CC BY clip), then re-shoot both layers —
+keep [docs/images/CREDITS.md](docs/images/CREDITS.md) accurate if the clip changes.
 
 Tests: `npm test` (vitest, `src/**/*.test.js`). Only pure modules are covered —
 `src/labels.js` today. Keep new pure logic in a module that can be tested rather

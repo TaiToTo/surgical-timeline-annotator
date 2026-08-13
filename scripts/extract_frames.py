@@ -35,7 +35,11 @@ from frameseq import (
     require_tool, scaled, view_dirs, write_meta,
 )
 
-VIDEO_EXTS = ('.mp4', '.mov', '.mkv', '.avi', '.m4v', '.webm')
+# Extensions picked up when scanning data/videos/. Anything ffmpeg can decode
+# works via --video PATH; this tuple only governs auto-discovery. .ogv/.ogg are
+# included because open-access journals publish surgical clips in that container
+# (see the sample video in the README).
+VIDEO_EXTS = ('.mp4', '.mov', '.mkv', '.avi', '.m4v', '.webm', '.ogv', '.ogg')
 
 # Per-view width defaults: a single view fills the preview, so it gets more
 # pixels than one panel of a stacked two-view preview.
