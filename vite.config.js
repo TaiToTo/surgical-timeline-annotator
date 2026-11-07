@@ -23,6 +23,10 @@ export default defineConfig({
     port: Number(process.env.ANNOTATOR_PORT) || 5180,
     strictPort: true,
     fs: { allow: ['.', '..'] },
+    // outputs/ holds frame sequences (tens of thousands of JPEGs each, often
+    // symlinked in from shared storage) and saved JSON — data, not source.
+    // Watching it exhausts the inotify limit (ENOSPC) and kills the server.
+    watch: { ignored: ['**/outputs/**', '**/data/**'] },
   },
   build: {
     outDir: 'dist',
@@ -132,13 +136,33 @@ export default defineConfig({
           try {
             const dirs = fs.existsSync(framesRoot)
               ? fs.readdirSync(framesRoot, { withFileTypes: true })
-                  .filter(d => d.isDirectory())
+                  // a sequence may be a symlink to a directory on shared storage
+                  .filter(d => d.isDirectory() || d.isSymbolicLink())
                   .map(d => d.name)
                   .filter(n => fs.existsSync(path.join(framesRoot, n, 'meta.json')))
                   .sort()
               : [];
+            // Segment counts of the newest phase / gesture file — the same files
+            // autoLoadLatestAnnotation() opens — so the picker can show which
+            // sequences already carry labels (a 1-segment gesture file is a seed).
+            const annFiles = fs.existsSync(annDir)
+              ? fs.readdirSync(annDir).filter(f => f.endsWith('.json')).sort().reverse()
+              : [];
+            const countOf = (file) => {
+              try {
+                return JSON.parse(fs.readFileSync(path.join(annDir, file), 'utf8'))
+                  .annotations?.length ?? 0;
+              } catch { return null; }
+            };
+            const counts = (name) => {
+              const mine = annFiles.filter(f => f.startsWith(name + '_annotations_'));
+              const phase   = mine.find(f => !/_gesture/i.test(f));
+              const gesture = mine.find(f => /_gesture/i.test(f));
+              return { phases: phase ? countOf(phase) : null,
+                       gestures: gesture ? countOf(gesture) : null };
+            };
             sendJson(res, dirs.map(name => ({
-              name, layout: layoutOf(path.join(framesRoot, name)),
+              name, layout: layoutOf(path.join(framesRoot, name)), ...counts(name),
             })));
           } catch {
             sendJson(res, []);

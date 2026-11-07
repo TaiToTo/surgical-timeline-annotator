@@ -91,6 +91,8 @@ npm run dev        # → http://localhost:5180
 ```
 
 Pick a frame sequence from the dropdown in the header to start annotating.
+Each entry shows the segment counts of its newest saved files
+(`phase N · gesture M`), so labelled sequences stand out from unlabelled ones.
 
 **If you already have frame images**, replace step 2 with:
 

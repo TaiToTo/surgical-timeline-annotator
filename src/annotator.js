@@ -263,9 +263,11 @@ async function loadFrameSeqList() {
       const ph = document.createElement('option');
       ph.value = ''; ph.textContent = '— select frame sequence —';
       frameSeqSelect.appendChild(ph);
-      seqs.forEach(({ name }) => {
+      seqs.forEach(({ name, phases, gestures }) => {
         const opt = document.createElement('option');
-        opt.value = name; opt.textContent = name;
+        const tags = [phases ? `phase ${phases}` : null, gestures ? `gesture ${gestures}` : null]
+          .filter(Boolean).join(' · ');
+        opt.value = name; opt.textContent = tags ? `${name}  —  ${tags}` : name;
         frameSeqSelect.appendChild(opt);
       });
       if (prev) frameSeqSelect.value = prev;

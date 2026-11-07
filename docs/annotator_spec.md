@@ -16,13 +16,17 @@ Vite の開発サーバがページ配信に加えて次を提供する（[vite.
 
 | エンドポイント | 役割 |
 |---|---|
-| `GET /api/frame-sequences` | `outputs/frames/` 直下で `meta.json` を持つディレクトリを `[{name, layout}]` で返す |
+| `GET /api/frame-sequences` | `outputs/frames/` 直下で `meta.json` を持つディレクトリ（共有ストレージへの symlink でもよい）を `[{name, layout, phases, gestures}]` で返す。`phases` / `gestures` はそのシーケンスの最新の Phase / Gesture ファイル（`autoLoadLatestAnnotation()` が開くもの）の区間数で、ファイルが無ければ `null` |
 | `GET /api/annotations` | `outputs/annotations/` の `*.json` 一覧 |
 | `POST /api/annotations/<file>` | アノテーション JSON を保存（`.json` かつパス区切りを含まない名前のみ許可） |
 | `GET /outputs/**` | フレーム画像・meta.json・保存済み JSON の静的配信（Range 対応、`Cache-Control: no-store`） |
 
 ポート衝突時は暗黙に別ポートへ逃げず落ちる（`strictPort`）。
 ヘッダの **⟳** ボタンで、ページを再読み込みせずシーケンス一覧を再スキャンできる。
+プルダウンの各項目には区間数が `<seq>  —  phase N · gesture M` の形で付くので、
+注釈済みの列と、区間が 1 つだけの種ファイルしかない列を開く前に見分けられる。
+開発サーバは `outputs/` と `data/` を watch しない（数万枚の列を watch すると inotify の
+上限（ENOSPC）でサーバが落ちる）。
 
 ---
 
